@@ -16,7 +16,7 @@
    "Properties": {
     "Name": "/RpgGen/llm_model_id",
     "Type": "String",
-    "Value": "anthropic.claude-v2"
+    "Value": "anthropic.-v2"
    },
    "Metadata": {
     "aws:cdk:path": "GenAIStack/ssmLLMModelIDParameter/Resource"

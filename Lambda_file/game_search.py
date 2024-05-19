@@ -6,8 +6,8 @@ def lambda_handler(event, context):
     bedrock_client = boto3.client('bedrock-agent-runtime')
     
     # 設置Agent的參數
-    agent_name = 'Assistant_Game_score'
-    agentAliasId = 'peko'
+    agent_name = 'Search_Assistant'
+    agentAliasId = 'pekolapeko'
     input_text = event['input_text']
     sessionId = event['session_id']
     
