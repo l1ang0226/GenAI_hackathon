@@ -1,0 +1,1160 @@
+{
+ "Resources": {
+  "ssmBedrockRegionParameter3898168F": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/RpgGen/bedrock_region",
+    "Type": "String",
+    "Value": "us-west-2"
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/ssmBedrockRegionParameter/Resource"
+   }
+  },
+  "ssmLLMModelIDParameterA0CC5D29": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/RpgGen/llm_model_id",
+    "Type": "String",
+    "Value": "anthropic.claude-v2"
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/ssmLLMModelIDParameter/Resource"
+   }
+  },
+  "RpgGenChatHistoryTable1BCF7DF2": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "SessionId",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "SessionId",
+      "KeyType": "HASH"
+     }
+    ],
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableClass": "STANDARD"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenChatHistoryTable/Resource"
+   }
+  },
+  "RpgGenLambdaAgentContainerServiceRole00F96AF1": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonBedrockFullAccess"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenLambdaAgentContainer/ServiceRole/Resource"
+   }
+  },
+  "RpgGenLambdaAgentContainerServiceRoleDefaultPolicyF689453B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ssm:DescribeParameters",
+        "ssm:GetParameter",
+        "ssm:GetParameterHistory",
+        "ssm:GetParameters"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":ssm:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":parameter",
+           {
+            "Ref": "ssmBedrockRegionParameter3898168F"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":ssm:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":parameter",
+           {
+            "Ref": "ssmLLMModelIDParameterA0CC5D29"
+           }
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "RpgGenChatHistoryTable1BCF7DF2",
+          "Arn"
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "RpgGenLambdaAgentContainerServiceRoleDefaultPolicyF689453B",
+    "Roles": [
+     {
+      "Ref": "RpgGenLambdaAgentContainerServiceRole00F96AF1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenLambdaAgentContainer/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "RpgGenLambdaAgentContainerC37A58D9": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "ImageUri": {
+      "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-${AWS::AccountId}-${AWS::Region}:ff16ecdb43fb2a458bd15d7e6774b3d94b15da03a8139a49a0bd53679e36ce48"
+     }
+    },
+    "Description": "Lambda function with bedrock access created via CDK",
+    "Environment": {
+     "Variables": {
+      "BEDROCK_REGION_PARAMETER": {
+       "Ref": "ssmBedrockRegionParameter3898168F"
+      },
+      "LLM_MODEL_ID_PARAMETER": {
+       "Ref": "ssmLLMModelIDParameterA0CC5D29"
+      },
+      "CHAT_MESSAGE_HISTORY_TABLE": {
+       "Ref": "RpgGenChatHistoryTable1BCF7DF2"
+      }
+     }
+    },
+    "MemorySize": 2048,
+    "PackageType": "Image",
+    "Role": {
+     "Fn::GetAtt": [
+      "RpgGenLambdaAgentContainerServiceRole00F96AF1",
+      "Arn"
+     ]
+    },
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "RpgGenLambdaAgentContainerServiceRoleDefaultPolicyF689453B",
+    "RpgGenLambdaAgentContainerServiceRole00F96AF1"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenLambdaAgentContainer/Resource",
+    "aws:asset:path": "asset.ff16ecdb43fb2a458bd15d7e6774b3d94b15da03a8139a49a0bd53679e36ce48",
+    "aws:asset:dockerfile-path": "Dockerfile",
+    "aws:asset:docker-build-args": {
+     "--platform": "linux/amd64"
+    },
+    "aws:asset:property": "Code.ImageUri"
+   }
+  },
+  "RpgGenAgentLambdaNameParameter98A967ED": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/RpgGen/AgentExecutorLambdaNameParameter",
+    "Type": "String",
+    "Value": {
+     "Ref": "RpgGenLambdaAgentContainerC37A58D9"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenAgentLambdaNameParameter/Resource"
+   }
+  },
+  "RpgGenAgentDataBucketF7516290": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenAgentDataBucket/Resource"
+   }
+  },
+  "RpgGenAgentDataBucketPolicy7676693F": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "RpgGenAgentDataBucketF7516290"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:PutBucketPolicy"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "RpgGenAgentDataBucketF7516290",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "RpgGenAgentDataBucketF7516290",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenAgentDataBucket/Policy/Resource"
+   }
+  },
+  "RpgGenAgentDataBucketAutoDeleteObjectsCustomResource5145089B": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "RpgGenAgentDataBucketF7516290"
+    }
+   },
+   "DependsOn": [
+    "RpgGenAgentDataBucketPolicy7676693F"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenAgentDataBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "b7f33614a69548d6bafe224d751a7ef238cde19097415e553fe8b63a4c8fd8a6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs18.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "RpgGenAgentDataBucketF7516290"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.b7f33614a69548d6bafe224d751a7ef238cde19097415e553fe8b63a4c8fd8a6",
+    "aws:asset:property": "Code"
+   }
+  },
+  "RpgGenAgentDataBucketParameterA5464940": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/RpgGen/AgentDataBucketParameter",
+    "Type": "String",
+    "Value": {
+     "Ref": "RpgGenAgentDataBucketF7516290"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/RpgGenAgentDataBucketParameter/Resource"
+   }
+  },
+  "CognitoPool2F2E48AB": {
+   "Type": "AWS::Cognito::UserPool",
+   "Properties": {
+    "AccountRecoverySetting": {
+     "RecoveryMechanisms": [
+      {
+       "Name": "verified_phone_number",
+       "Priority": 1
+      },
+      {
+       "Name": "verified_email",
+       "Priority": 2
+      }
+     ]
+    },
+    "AdminCreateUserConfig": {
+     "AllowAdminCreateUserOnly": false
+    },
+    "AliasAttributes": [
+     "email"
+    ],
+    "AutoVerifiedAttributes": [
+     "email"
+    ],
+    "EmailVerificationMessage": "The verification code to your new account is {####}",
+    "EmailVerificationSubject": "Verify your new account",
+    "Schema": [
+     {
+      "Mutable": false,
+      "Name": "email",
+      "Required": true
+     }
+    ],
+    "SmsVerificationMessage": "The verification code to your new account is {####}",
+    "UsernameConfiguration": {
+     "CaseSensitive": false
+    },
+    "VerificationMessageTemplate": {
+     "DefaultEmailOption": "CONFIRM_WITH_CODE",
+     "EmailMessage": "The verification code to your new account is {####}",
+     "EmailSubject": "Verify your new account",
+     "SmsMessage": "The verification code to your new account is {####}"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/CognitoPool/Resource"
+   }
+  },
+  "CognitoPoolNextJsAppClient17034EED": {
+   "Type": "AWS::Cognito::UserPoolClient",
+   "Properties": {
+    "AllowedOAuthFlows": [
+     "code"
+    ],
+    "AllowedOAuthFlowsUserPoolClient": true,
+    "AllowedOAuthScopes": [
+     "openid"
+    ],
+    "CallbackURLs": [
+     "https://localhost:3000/"
+    ],
+    "LogoutURLs": [
+     "https://localhost:3000/"
+    ],
+    "SupportedIdentityProviders": [
+     "COGNITO"
+    ],
+    "UserPoolId": {
+     "Ref": "CognitoPool2F2E48AB"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/CognitoPool/NextJsAppClient/Resource"
+   }
+  },
+  "AssistantApi31301AC3": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "An API to invoke an LLM based agent which orchestrates using tools to answer user input questions.",
+    "Name": "assistant-api"
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/AssistantApi/Resource"
+   }
+  },
+  "AssistantApiDeployment915E6439a5027bc5d22933889c59dbd25bb8a542": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "An API to invoke an LLM based agent which orchestrates using tools to answer user input questions.",
+    "RestApiId": {
+     "Ref": "AssistantApi31301AC3"
+    }
+   },
+   "DependsOn": [
+    "AssistantApiOPTIONSE2DADC28",
+    "AssistantApiPOST86F761C9",
+    "ChatAuthorizer3005753F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/AssistantApi/Deployment/Resource"
+   }
+  },
+  "AssistantApiDeploymentStageprodD980B56D": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "AssistantApiDeployment915E6439a5027bc5d22933889c59dbd25bb8a542"
+    },
+    "RestApiId": {
+     "Ref": "AssistantApi31301AC3"
+    },
+    "StageName": "prod"
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/AssistantApi/DeploymentStage.prod/Resource"
+   }
+  },
+  "AssistantApiOPTIONSE2DADC28": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "AssistantApi31301AC3",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "AssistantApi31301AC3"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/AssistantApi/Default/OPTIONS/Resource"
+   }
+  },
+  "AssistantApiPOSTApiPermissionGenAIStackAssistantApi3B89B425POST9321AEF1": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "RpgGenLambdaAgentContainerC37A58D9",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "AssistantApi31301AC3"
+       },
+       "/",
+       {
+        "Ref": "AssistantApiDeploymentStageprodD980B56D"
+       },
+       "/POST/"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/AssistantApi/Default/POST/ApiPermission.GenAIStackAssistantApi3B89B425.POST.."
+   }
+  },
+  "AssistantApiPOSTApiPermissionTestGenAIStackAssistantApi3B89B425POST2AA55C9D": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "RpgGenLambdaAgentContainerC37A58D9",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "AssistantApi31301AC3"
+       },
+       "/test-invoke-stage/POST/"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/AssistantApi/Default/POST/ApiPermission.Test.GenAIStackAssistantApi3B89B425.POST.."
+   }
+  },
+  "AssistantApiPOST86F761C9": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "ChatAuthorizer3005753F"
+    },
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'POST,OPTIONS'"
+       },
+       "StatusCode": "200"
+      }
+     ],
+     "Type": "AWS",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "RpgGenLambdaAgentContainerC37A58D9",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "200"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "AssistantApi31301AC3",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "AssistantApi31301AC3"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/AssistantApi/Default/POST/Resource"
+   }
+  },
+  "ChatAuthorizer3005753F": {
+   "Type": "AWS::ApiGateway::Authorizer",
+   "Properties": {
+    "IdentitySource": "method.request.header.Authorization",
+    "Name": "GenAIStackChatAuthorizer683E49F6",
+    "ProviderARNs": [
+     {
+      "Fn::GetAtt": [
+       "CognitoPool2F2E48AB",
+       "Arn"
+      ]
+     }
+    ],
+    "RestApiId": {
+     "Ref": "AssistantApi31301AC3"
+    },
+    "Type": "COGNITO_USER_POOLS"
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/ChatAuthorizer/Resource"
+   }
+  },
+  "cognitoUserPoolParameterD1967D29": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/RpgGen/cognito_user_pool_id",
+    "Type": "String",
+    "Value": {
+     "Ref": "CognitoPool2F2E48AB"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/cognitoUserPoolParameter/Resource"
+   }
+  },
+  "cognitoUserPoolClientParameter86E153A7": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/RpgGen/cognito_user_pool_client_id",
+    "Type": "String",
+    "Value": {
+     "Ref": "CognitoPoolNextJsAppClient17034EED"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/cognitoUserPoolClientParameter/Resource"
+   }
+  },
+  "AgentAPIURLParameterAF26C4F2": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Name": "/RpgGen/agent_api",
+    "Type": "String",
+    "Value": {
+     "Fn::Join": [
+      "",
+      [
+       "https://",
+       {
+        "Ref": "AssistantApi31301AC3"
+       },
+       ".execute-api.",
+       {
+        "Ref": "AWS::Region"
+       },
+       ".",
+       {
+        "Ref": "AWS::URLSuffix"
+       },
+       "/",
+       {
+        "Ref": "AssistantApiDeploymentStageprodD980B56D"
+       },
+       "/"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/AgentAPIURLParameter/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WRQU/DMAyFfwv3LECRuI8iJA6IqsAZeakpZk1cxS5TqfrfUdJtlJO/l+e+2E1hr4tbe3UBB9m4Zr/paGenFwW3N3CQ90nEJx0ptBVE8KgYTfkRzmI2zRjAc7Oz0yvsOkxuhtl04HcN2Ome3R7jo4cWH4bglDikrjVXGD2JEIfZEHg71bxE5VpxR27MfZlmgy6+gwiq2FX6Np0kz9bYs5ByHO9A0MiNne4Gt0dNIUdayl/2Ws/GcRtI2U5vgrFi7lLLmU9QdoRB19ZyMhvoqQXFA4x2qlF021Pe54j32Hc8+uPHK/Wi0ObNF6hReIgO8xpPqJ/cJPNEy5Cnu2U76CdH+lke6U/N8znI5J+Uwim0phxE2Z+9ZcAj/7OqyN/UYMxzlB/hedB+yLOXHBrS/HKBG7RfcvldXNnrwhYXX0K0iUNQ8mjrpf4CUHG3g3MCAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "GenAIStack/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Outputs": {
+  "AssistantApiEndpointF696CEB5": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "AssistantApi31301AC3"
+      },
+      ".execute-api.",
+      {
+       "Ref": "AWS::Region"
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "AssistantApiDeploymentStageprodD980B56D"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "UserPoolClient": {
+   "Value": {
+    "Ref": "CognitoPoolNextJsAppClient17034EED"
+   }
+  },
+  "UserPoolId": {
+   "Value": {
+    "Ref": "CognitoPool2F2E48AB"
+   }
+  },
+  "UserPoolProviderURL": {
+   "Value": {
+    "Fn::GetAtt": [
+     "CognitoPool2F2E48AB",
+     "ProviderURL"
+    ]
+   }
+  },
+  "EndpointURL": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "AssistantApi31301AC3"
+      },
+      ".execute-api.",
+      {
+       "Ref": "AWS::Region"
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "AssistantApiDeploymentStageprodD980B56D"
+      },
+      "/"
+     ]
+    ]
+   }
+  }
+ },
+ "Conditions": {
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "il-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-2"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

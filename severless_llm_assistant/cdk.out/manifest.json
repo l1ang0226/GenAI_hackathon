@@ -1,0 +1,257 @@
+{
+  "version": "36.0.0",
+  "artifacts": {
+    "GenAIStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "GenAIStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "GenAIStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/unknown-region",
+      "properties": {
+        "templateFile": "GenAIStack.template.json",
+        "terminationProtection": false,
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/f98452a67e718414b5bea7a5bcd6193a6ae6a56be4126631072c4be860f20e86.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "GenAIStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-${AWS::Region}",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "GenAIStack.assets"
+      ],
+      "metadata": {
+        "/GenAIStack/ssmBedrockRegionParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ssmBedrockRegionParameter3898168F"
+          }
+        ],
+        "/GenAIStack/ssmLLMModelIDParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ssmLLMModelIDParameterA0CC5D29"
+          }
+        ],
+        "/GenAIStack/RpgGenChatHistoryTable/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenChatHistoryTable1BCF7DF2"
+          }
+        ],
+        "/GenAIStack/RpgGenLambdaAgentContainer/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenLambdaAgentContainerServiceRole00F96AF1"
+          }
+        ],
+        "/GenAIStack/RpgGenLambdaAgentContainer/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenLambdaAgentContainerServiceRoleDefaultPolicyF689453B"
+          }
+        ],
+        "/GenAIStack/RpgGenLambdaAgentContainer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenLambdaAgentContainerC37A58D9"
+          }
+        ],
+        "/GenAIStack/RpgGenAgentLambdaNameParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenAgentLambdaNameParameter98A967ED"
+          }
+        ],
+        "/GenAIStack/RpgGenAgentDataBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenAgentDataBucketF7516290"
+          }
+        ],
+        "/GenAIStack/RpgGenAgentDataBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenAgentDataBucketPolicy7676693F"
+          }
+        ],
+        "/GenAIStack/RpgGenAgentDataBucket/AutoDeleteObjectsCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenAgentDataBucketAutoDeleteObjectsCustomResource5145089B"
+          }
+        ],
+        "/GenAIStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+          }
+        ],
+        "/GenAIStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F"
+          }
+        ],
+        "/GenAIStack/RpgGenAgentDataBucketParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RpgGenAgentDataBucketParameterA5464940"
+          }
+        ],
+        "/GenAIStack/CognitoPool/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CognitoPool2F2E48AB"
+          }
+        ],
+        "/GenAIStack/CognitoPool/NextJsAppClient/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CognitoPoolNextJsAppClient17034EED"
+          }
+        ],
+        "/GenAIStack/AssistantApi/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssistantApi31301AC3"
+          }
+        ],
+        "/GenAIStack/AssistantApi/Deployment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssistantApiDeployment915E6439a5027bc5d22933889c59dbd25bb8a542"
+          }
+        ],
+        "/GenAIStack/AssistantApi/DeploymentStage.prod/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssistantApiDeploymentStageprodD980B56D"
+          }
+        ],
+        "/GenAIStack/AssistantApi/Endpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssistantApiEndpointF696CEB5"
+          }
+        ],
+        "/GenAIStack/AssistantApi/Default/OPTIONS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssistantApiOPTIONSE2DADC28"
+          }
+        ],
+        "/GenAIStack/AssistantApi/Default/POST/ApiPermission.GenAIStackAssistantApi3B89B425.POST..": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssistantApiPOSTApiPermissionGenAIStackAssistantApi3B89B425POST9321AEF1"
+          }
+        ],
+        "/GenAIStack/AssistantApi/Default/POST/ApiPermission.Test.GenAIStackAssistantApi3B89B425.POST..": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssistantApiPOSTApiPermissionTestGenAIStackAssistantApi3B89B425POST2AA55C9D"
+          }
+        ],
+        "/GenAIStack/AssistantApi/Default/POST/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AssistantApiPOST86F761C9"
+          }
+        ],
+        "/GenAIStack/ChatAuthorizer/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ChatAuthorizer3005753F"
+          }
+        ],
+        "/GenAIStack/cognitoUserPoolParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "cognitoUserPoolParameterD1967D29"
+          }
+        ],
+        "/GenAIStack/cognitoUserPoolClientParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "cognitoUserPoolClientParameter86E153A7"
+          }
+        ],
+        "/GenAIStack/AgentAPIURLParameter/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AgentAPIURLParameterAF26C4F2"
+          }
+        ],
+        "/GenAIStack/UserPoolClient": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserPoolClient"
+          }
+        ],
+        "/GenAIStack/UserPoolId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserPoolId"
+          }
+        ],
+        "/GenAIStack/UserPoolProviderURL": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UserPoolProviderURL"
+          }
+        ],
+        "/GenAIStack/EndpointURL": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EndpointURL"
+          }
+        ],
+        "/GenAIStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/GenAIStack/CDKMetadata/Condition": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadataAvailable"
+          }
+        ],
+        "/GenAIStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/GenAIStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "GenAIStack"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    }
+  }
+}
